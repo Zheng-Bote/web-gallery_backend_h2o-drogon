@@ -1,0 +1,55 @@
+# Stage 1: Build
+FROM ubuntu:24.04 AS build
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    build-essential cmake git pkg-config \
+    libssl-dev libjsoncpp-dev uuid-dev zlib1g-dev \
+    libspdlog-dev nlohmann-json3-dev libpq-dev \
+    libexiv2-dev libwebp-dev libargon2-dev \
+    libmagick++-dev \
+    ninja-build gcc-14 g++-14 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CC=gcc-14
+ENV CXX=g++-14
+
+# Build Drogon
+WORKDIR /tmp/drogon
+RUN git clone https://github.com/drogonframework/drogon.git . \
+    && git submodule update --init \
+    && cmake -G Ninja -B build -S . -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build -j$(nproc) --target install
+
+# Build App
+WORKDIR /app
+COPY . .
+RUN cmake -G Ninja -B build -S . \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=gcc-14 \
+    -DCMAKE_CXX_COMPILER=g++-14 \
+    && cmake --build build -j$(nproc)
+
+# Stage 2: Runtime
+FROM ubuntu:24.04 AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    h2o libssl3 libjsoncpp25 uuid-dev zlib1g \
+    libspdlog1.12 nlohmann-json3-dev libpq5 \
+    libexiv2-27 libwebp7 libargon2-1 \
+    libmagick++-6.q16-9t64 \
+    && rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR /app
+COPY --from=build /app/build/PhotoGalleryBackend .
+COPY --from=build /app/build/gallery-import .
+COPY --from=build /app/docs/h2o.dev.conf /etc/h2o/h2o.dev.conf
+COPY --from=build /app/docker-entrypoint.sh .
+
+RUN mkdir -p /data/frontend /data/photos /data/thumbs /data/logs
+VOLUME ["/data"]
+RUN chmod +x docker-entrypoint.sh PhotoGalleryBackend gallery-import
+
+CMD ["./docker-entrypoint.sh"]

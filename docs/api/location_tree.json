@@ -1,0 +1,32 @@
+{
+  "continents": [
+    {
+      "name": "Europe",
+      "countries": [
+        {
+          "name": "Italy",
+          "provinces": [
+            {
+              "name": "Tuscany",
+              "cities": ["Florence", "Pisa"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Africa",
+      "countries": [
+        {
+          "name": "United Arab Emirates",
+          "provinces": [
+            {
+              "name": "Dubai",
+              "cities": ["Airport"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

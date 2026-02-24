@@ -1,0 +1,18 @@
+{
+  "description": "Example response for GET /api/users/me",
+  "id": "user-uuid",
+  "username": "robert",
+  "permissions": ["photo.read", "photo.write", "user.manage"],
+  "channels": [
+    {
+      "type": "email",
+      "address": "robert@example.com",
+      "enabled": true
+    },
+    {
+      "type": "telegram",
+      "address": "@robert",
+      "enabled": false
+    }
+  ]
+}

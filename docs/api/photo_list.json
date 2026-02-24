@@ -1,0 +1,17 @@
+{
+  "description": "Example response for GET /api/photos",
+  "data": [
+    {
+      "id": "3f2a-...",
+      "file_name": "IMG_1234.jpg",
+      "thumb_path": "/data/thumbs/480/Africa/Dubai/Airport/2011-03/CAM_0083.webp",
+      "width": 480,
+      "height": 320
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 100
+  }
+}
