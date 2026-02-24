@@ -2,6 +2,10 @@
 
 **quick + dirty für DEV**
 
+> [!WARNING]
+> keine Plaintext Passwörter in Konfigurationen!
+> Passwörter gehören mindestens in eine `.env`
+
 ## Dockerfile
 
 ```dockerfile
@@ -9,7 +13,7 @@
 FROM postgres:latest
 
 # Setze die Umgebungsvariablen (entspricht den -e Parametern)
-ENV POSTGRES_PASSWORD=Sidolin1
+ENV POSTGRES_PASSWORD=TopSecret
 ENV PGDATA=/var/lib/postgresql/data/pgdata
 
 # Dokumentiere den internen Port (optional, aber Best Practice)
@@ -32,7 +36,7 @@ services:
     container_name: psql_server
     hostname: psql_db
     environment:
-      POSTGRES_PASSWORD: Sidolin1
+      POSTGRES_PASSWORD: TopSecret
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "6543:5432"
