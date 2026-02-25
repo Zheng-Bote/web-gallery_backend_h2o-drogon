@@ -7,8 +7,8 @@
  *
  * @file token_service.cpp
  * @brief Token Service Implementation (JWT)
- * @version 0.1.0
- * @date 2026-02-24
+ * @version 0.1.5
+ * @date 2026-02-25
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
  * @copyright Copyright (c) 2026 ZHENG Robert
@@ -18,6 +18,7 @@
 
 #include "token_service.hpp"
 #include <chrono>
+#include <format>
 #include <jwt-cpp/jwt.h>
 
 namespace domain::services {
@@ -31,7 +32,7 @@ TokenService::create_token(const TokenPayload &payload,
             .set_issuer("PhotoGallery")
             .set_type("JWS")
             .set_subject(payload.user_id)
-            .set_payload_claim("username", jwt::claim(payload.username))
+            .set_payload_claim("username", jwt::claim(std::string(payload.username)))
             .set_issued_at(std::chrono::system_clock::now())
             .set_expires_at(std::chrono::system_clock::now() +
                             std::chrono::hours{24})

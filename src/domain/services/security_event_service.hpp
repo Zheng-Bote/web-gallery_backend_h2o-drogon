@@ -7,8 +7,8 @@
  *
  * @file security_event_service.hpp
  * @brief Service for logging security-relevant audit events
- * @version 0.1.0
- * @date 2026-02-24
+ * @version 0.1.1
+ * @date 2026-02-25
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
  * @copyright Copyright (c) 2026 ZHENG Robert
@@ -37,8 +37,10 @@ public:
                         std::optional<std::string_view> user_id,
                         std::string_view details) {
     std::string log_msg = std::format(
-        "user={} event={} details=" {} "", user_id.value_or("unknown"),
-        event_type, details);
+        "user={} event={} details={}", 
+        user_id.value_or("unknown"),
+        event_type, 
+        details);
     core::logging::LoggerFactory::security()->info(log_msg);
   }
 
@@ -48,7 +50,7 @@ public:
 
   static void login_failed(std::string_view username, std::string_view reason) {
     log_event("login_failed", std::nullopt,
-              std::format("username={} reason=" {} "", username, reason));
+              std::format("username={} reason={}", username, reason));
   }
 
   static void password_changed(std::string_view user_id) {

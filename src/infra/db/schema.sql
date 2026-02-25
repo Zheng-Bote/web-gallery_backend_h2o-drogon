@@ -88,6 +88,8 @@ CREATE TABLE IF NOT EXISTS photos (
     focal_length FLOAT,
     gps_lat DOUBLE PRECISION,
     gps_lon DOUBLE PRECISION,
+    gps_alt DOUBLE PRECISION,
+    is_public BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

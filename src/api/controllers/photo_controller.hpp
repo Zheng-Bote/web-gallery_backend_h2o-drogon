@@ -7,8 +7,8 @@
  *
  * @file photo_controller.hpp
  * @brief Photo API Controller Header file
- * @version 0.1.0
- * @date 2026-02-24
+ * @version 0.1.1
+ * @date 2026-02-25
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
  * @copyright Copyright (c) 2026 ZHENG Robert
@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "api/middleware/auth_middleware.hpp"
+#include "api/middleware/optional_auth_middleware.hpp"
 #include <drogon/HttpController.h>
 
 /**
@@ -35,9 +35,12 @@ class PhotoController : public drogon::HttpController<PhotoController> {
 public:
   METHOD_LIST_BEGIN
   ADD_METHOD_TO(PhotoController::get_photos, "/api/photos", drogon::Get,
-                "api::middleware::AuthMiddleware");
+                "api::middleware::OptionalAuthMiddleware");
+  // Auch mit Trailing Slash für Konsistenz
+  ADD_METHOD_TO(PhotoController::get_photos, "/api/photos/", drogon::Get,
+                "api::middleware::OptionalAuthMiddleware");
   ADD_METHOD_TO(PhotoController::get_photo_detail, "/api/photos/{id}",
-                drogon::Get, "api::middleware::AuthMiddleware");
+                drogon::Get, "api::middleware::OptionalAuthMiddleware");
   ADD_METHOD_TO(PhotoController::ping, "/api/ping", drogon::Get);
   METHOD_LIST_END
 

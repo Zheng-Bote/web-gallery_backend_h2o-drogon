@@ -20,6 +20,7 @@ find_package(OpenSSL REQUIRED)
 find_package(PostgreSQL REQUIRED)
 find_package(exiv2 REQUIRED)
 find_package(WebP REQUIRED)
+pkg_check_modules(ARGON2 REQUIRED libargon2)
 
 # JWT-CPP
 set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -30,7 +31,7 @@ include(FetchContent)
 FetchContent_Declare(
     jwt-cpp
     GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
-    GIT_TAG        master
+    GIT_TAG        v0.7.0
 )
 FetchContent_MakeAvailable(jwt-cpp)
 
@@ -49,7 +50,11 @@ add_executable(${PROJECT_NAME} src/app/main.cpp ${SRC_FILES})
 target_include_directories(${PROJECT_NAME} PRIVATE 
     src
     include
+)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
     ${Drogon_INCLUDE_DIRS}
+    ${jwt-cpp_SOURCE_DIR}/include
+    ${ARGON2_INCLUDE_DIRS}
 )
 
 # Target Link Libraries
@@ -63,6 +68,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     jwt-cpp::jwt-cpp
     exiv2lib
     WebP::webp
+    ${ARGON2_LIBRARIES}
 )
 
 find_package(PkgConfig REQUIRED)
@@ -73,16 +79,22 @@ add_executable(gallery-import src/app/import_main.cpp ${SRC_FILES})
 target_include_directories(gallery-import PRIVATE 
     src 
     include
+)
+target_include_directories(gallery-import SYSTEM PRIVATE
     ${Drogon_INCLUDE_DIRS}
     ${MAGICK_INCLUDE_DIRS}
+    ${jwt-cpp_SOURCE_DIR}/include
+    ${ARGON2_INCLUDE_DIRS}
 )
 target_link_libraries(gallery-import PRIVATE
     Drogon::Drogon
     spdlog::spdlog
     nlohmann_json::nlohmann_json
     PostgreSQL::PostgreSQL
+    jwt-cpp::jwt-cpp
     exiv2lib
     WebP::webp
     ${MAGICK_LIBRARIES}
+    ${ARGON2_LIBRARIES}
     uuid
 )

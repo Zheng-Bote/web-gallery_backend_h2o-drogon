@@ -7,8 +7,8 @@
  *
  * @file auth_service.cpp
  * @brief Auth Service Implementation
- * @version 0.1.0
- * @date 2026-02-24
+ * @version 0.1.1
+ * @date 2026-02-25
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
  * @copyright Copyright (c) 2026 ZHENG Robert
@@ -20,7 +20,7 @@
 
 namespace domain::services {
 
-std::expected<User, std::string>
+std::expected<domain::models::User, std::string>
 AuthService::authenticate_step1(std::string_view username,
                                 std::string_view password) {
   auto user_res = user_repo_->find_by_username(username);
@@ -48,7 +48,7 @@ AuthService::authenticate_step1(std::string_view username,
 }
 
 std::expected<AuthService::LoginResult, std::string>
-AuthService::authenticate_step2(const User &user, std::string_view totp_code,
+AuthService::authenticate_step2(const domain::models::User &user, std::string_view totp_code,
                                 std::string_view jwt_secret) {
   if (user.totp_secret) {
     if (!TotpService::validate_code(*user.totp_secret, totp_code)) {

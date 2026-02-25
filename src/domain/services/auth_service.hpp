@@ -19,6 +19,7 @@
 #pragma once
 
 #include "domain/interfaces/i_user_repository.hpp"
+#include "domain/models/user_models.hpp"
 #include "domain/services/password_service.hpp"
 #include "domain/services/security_event_service.hpp"
 #include "domain/services/token_service.hpp"
@@ -50,17 +51,17 @@ public:
    */
   struct LoginResult {
     std::string token;
-    User user;
+    domain::models::User user;
   };
 
   /**
    * @brief Authenticates a user's password (Step 1).
    * @param username The user's username.
    * @param password The user's plaintext password.
-   * @return std::expected<User, std::string> The authenticated User, or an
+   * @return std::expected<domain::models::User, std::string> The authenticated User, or an
    * error.
    */
-  std::expected<User, std::string>
+  std::expected<domain::models::User, std::string>
   authenticate_step1(std::string_view username, std::string_view password);
 
   /**
@@ -72,7 +73,7 @@ public:
    * the token, or an error.
    */
   std::expected<LoginResult, std::string>
-  authenticate_step2(const User &user, std::string_view totp_code,
+  authenticate_step2(const domain::models::User &user, std::string_view totp_code,
                      std::string_view jwt_secret);
 
 private:

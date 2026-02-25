@@ -97,6 +97,8 @@ erDiagram
         FLOAT focal_length
         DOUBLE gps_lat
         DOUBLE gps_lon
+        DOUBLE gps_alt
+        BOOLEAN is_public
         TIMESTAMPTZ created_at
     }
 

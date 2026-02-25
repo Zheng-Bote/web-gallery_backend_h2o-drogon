@@ -43,6 +43,9 @@ public:
   std::expected<void, std::string> save(const Photo &photo) override;
   std::expected<void, std::string> add_tag(std::string_view photo_id,
                                            std::string_view tag) override;
+  std::expected<void, std::string> save_metadata_exif(std::string_view photo_id, const std::map<std::string, std::string>& metadata) override;
+  std::expected<void, std::string> save_metadata_iptc(std::string_view photo_id, const std::map<std::string, std::string>& metadata) override;
+  std::expected<void, std::string> save_metadata_xmp(std::string_view photo_id, const std::map<std::string, std::string>& metadata) override;
 };
 
 /**
@@ -51,7 +54,8 @@ public:
  */
 class PostgresLocationRepository : public ILocationRepository {
 public:
-  std::expected<std::vector<Location>, std::string> get_tree() override;
+  std::expected<std::vector<Location>, std::string>
+  get_tree(bool only_public = false) override;
   std::expected<std::optional<Location>, std::string>
   find_or_create(const Location &loc) override;
 };

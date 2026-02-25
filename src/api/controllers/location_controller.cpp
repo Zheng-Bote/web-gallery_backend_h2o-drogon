@@ -7,7 +7,7 @@
  *
  * @file location_controller.cpp
  * @brief Location Controller Implementation file
- * @version 0.1.0
+ * @version 0.1.3
  * @date 2026-02-24
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
@@ -18,21 +18,27 @@
 
 #include "location_controller.hpp"
 #include "infra/repositories/photo_repository.hpp"
+#include <drogon/HttpResponse.h>
 #include <map>
 #include <nlohmann/json.hpp>
 
 namespace api::controllers {
 
 void LocationController::get_tree(
-    const drogon::HttpRequestPtr & /*req*/,
+    const drogon::HttpRequestPtr &req,
     std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
   infra::repositories::PostgresLocationRepository repo;
-  auto res = repo.get_tree();
+
+  // Attributes::get is safe here as OptionalAuthMiddleware always sets it
+  bool is_authenticated = req->attributes()->get<bool>("is_authenticated");
+  auto res = repo.get_tree(!is_authenticated);
 
   if (!res) {
-    auto resp = drogon::HttpResponse::newHttpJsonResponse(
-        nlohmann::json{{"error", res.error()}});
-    resp->setStatusCode(drogon::k500InternalServerError);
+    nlohmann::json error_json = {{"error", res.error()}};
+    auto resp = drogon::HttpResponse::newHttpResponse();
+    resp->setBody(error_json.dump());
+    resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+    resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
     callback(resp);
     return;
   }
@@ -74,7 +80,9 @@ void LocationController::get_tree(
     continents_arr.push_back(cont_json);
   }
 
-  auto resp = drogon::HttpResponse::newHttpJsonResponse(root);
+  auto resp = drogon::HttpResponse::newHttpResponse();
+  resp->setBody(root.dump());
+  resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
   callback(resp);
 }
 

@@ -20,6 +20,7 @@
 #include "core/config/config_loader.hpp"
 #include "domain/services/auth_service.hpp"
 #include "infra/repositories/user_repository.hpp"
+#include <drogon/HttpResponse.h>
 #include <nlohmann/json.hpp>
 
 namespace api::controllers {
@@ -29,8 +30,8 @@ void AuthController::login(
     std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
   auto json = req->getJsonObject();
   if (!json || !json->isMember("username") || !json->isMember("password")) {
-    auto resp =
-        drogon::HttpResponse::newHttpStatusCodeResponse(drogon::k400BadRequest);
+    auto resp = drogon::HttpResponse::newHttpResponse();
+    resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
     callback(resp);
     return;
   }
@@ -43,25 +44,39 @@ void AuthController::login(
                                              (*json)["password"].asString());
 
   if (!res) {
-    auto resp = drogon::HttpResponse::newHttpJsonResponse(
-        nlohmann::json{{"error", res.error()}});
-    resp->setStatusCode(drogon::k401Unauthorized);
+    nlohmann::json error_json = {{"error", res.error()}};
+    auto resp = drogon::HttpResponse::newHttpResponse();
+    resp->setBody(error_json.dump());
+    resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+    resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
     callback(resp);
     return;
   }
 
   nlohmann::json response;
-  if (res.value().totp_secret) {
+  if (res.value().totp_secret && !res.value().totp_secret->empty()) {
     response["requires_totp"] = true;
     response["user_id"] = res.value().id;
   } else {
     // Direct login if no TOTP
     auto secret = core::config::ConfigLoader::get("JWT_SECRET");
     auto login_res = auth_service.authenticate_step2(res.value(), "", secret);
-    response["token"] = login_res.value().token;
+    if (login_res) {
+      response["token"] = login_res.value().token;
+    } else {
+      nlohmann::json error_json = {{"error", login_res.error()}};
+      auto resp = drogon::HttpResponse::newHttpResponse();
+      resp->setBody(error_json.dump());
+      resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+      resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
+      callback(resp);
+      return;
+    }
   }
 
-  auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
+  auto resp = drogon::HttpResponse::newHttpResponse();
+  resp->setBody(response.dump());
+  resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
   callback(resp);
 }
 
@@ -70,8 +85,8 @@ void AuthController::login_totp(
     std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
   auto json = req->getJsonObject();
   if (!json || !json->isMember("user_id") || !json->isMember("code")) {
-    auto resp =
-        drogon::HttpResponse::newHttpStatusCodeResponse(drogon::k400BadRequest);
+    auto resp = drogon::HttpResponse::newHttpResponse();
+    resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
     callback(resp);
     return;
   }
@@ -81,8 +96,8 @@ void AuthController::login_totp(
   auto user_res = user_repo->find_by_id((*json)["user_id"].asString());
 
   if (!user_res || !user_res.value()) {
-    auto resp = drogon::HttpResponse::newHttpStatusCodeResponse(
-        drogon::k401Unauthorized);
+    auto resp = drogon::HttpResponse::newHttpResponse();
+    resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
     callback(resp);
     return;
   }
@@ -93,15 +108,19 @@ void AuthController::login_totp(
       user_res.value().value(), (*json)["code"].asString(), secret);
 
   if (!res) {
-    auto resp = drogon::HttpResponse::newHttpJsonResponse(
-        nlohmann::json{{"error", res.error()}});
-    resp->setStatusCode(drogon::k401Unauthorized);
+    nlohmann::json error_json = {{"error", res.error()}};
+    auto resp = drogon::HttpResponse::newHttpResponse();
+    resp->setBody(error_json.dump());
+    resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+    resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
     callback(resp);
     return;
   }
 
-  auto resp = drogon::HttpResponse::newHttpJsonResponse(
-      nlohmann::json{{"token", res.value().token}});
+  nlohmann::json response = {{"token", res.value().token}};
+  auto resp = drogon::HttpResponse::newHttpResponse();
+  resp->setBody(response.dump());
+  resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
   callback(resp);
 }
 

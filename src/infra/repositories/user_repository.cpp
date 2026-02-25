@@ -7,8 +7,8 @@
  *
  * @file user_repository.cpp
  * @brief PostgreSQL Implementation of User Repository
- * @version 0.1.0
- * @date 2026-02-24
+ * @version 0.1.3
+ * @date 2026-02-25
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
  * @copyright Copyright (c) 2026 ZHENG Robert
@@ -21,7 +21,7 @@
 
 namespace infra::repositories {
 
-std::expected<std::optional<User>, std::string>
+std::expected<std::optional<domain::models::User>, std::string>
 PostgresUserRepository::find_by_username(std::string_view username) {
   auto db = drogon::app().getDbClient();
   try {
@@ -31,15 +31,15 @@ PostgresUserRepository::find_by_username(std::string_view username) {
       return std::nullopt;
 
     const auto &row = result[0];
-    User u;
-    u.id = row["id"].as<std::string>();
-    u.username = row["username"].as<std::string>();
-    u.password_hash = row["password_hash"].as<std::string>();
+    domain::models::User u;
+    u.id = row["id"].template as<std::string>();
+    u.username = row["username"].template as<std::string>();
+    u.password_hash = row["password_hash"].template as<std::string>();
     if (!row["totp_secret"].isNull())
-      u.totp_secret = row["totp_secret"].as<std::string>();
-    u.is_active = row["is_active"].as<bool>();
-    u.pwd_must_change = row["pwd_must_change"].as<bool>();
-    u.language = row["language"].as<std::string>();
+      u.totp_secret = row["totp_secret"].template as<std::string>();
+    u.is_active = row["is_active"].template as<bool>();
+    u.pwd_must_change = row["pwd_must_change"].template as<bool>();
+    u.language = row["language"].template as<std::string>();
 
     return u;
   } catch (const std::exception &e) {
@@ -47,7 +47,7 @@ PostgresUserRepository::find_by_username(std::string_view username) {
   }
 }
 
-std::expected<std::optional<User>, std::string>
+std::expected<std::optional<domain::models::User>, std::string>
 PostgresUserRepository::find_by_id(std::string_view id) {
   auto db = drogon::app().getDbClient();
   try {
@@ -57,9 +57,9 @@ PostgresUserRepository::find_by_id(std::string_view id) {
       return std::nullopt;
 
     const auto &row = result[0];
-    User u;
-    u.id = row["id"].as<std::string>();
-    u.username = row["username"].as<std::string>();
+    domain::models::User u;
+    u.id = row["id"].template as<std::string>();
+    u.username = row["username"].template as<std::string>();
     // ... map other fields
     return u;
   } catch (const std::exception &e) {
@@ -68,7 +68,7 @@ PostgresUserRepository::find_by_id(std::string_view id) {
 }
 
 std::expected<void, std::string>
-PostgresUserRepository::save(const User &user) {
+PostgresUserRepository::save(const domain::models::User &user) {
   auto db = drogon::app().getDbClient();
   try {
     db->execSqlSync("INSERT INTO users (id, username, password_hash, "
@@ -85,21 +85,24 @@ PostgresUserRepository::save(const User &user) {
   }
 }
 
-std::expected<std::vector<Permission>, std::string>
+std::expected<std::vector<domain::models::Permission>, std::string>
 PostgresUserRepository::get_user_permissions(std::string_view user_id) {
   auto db = drogon::app().getDbClient();
   try {
     auto result =
-        db->execSqlSync("SELECT p.name, p.description FROM permissions p "
+        db->execSqlSync("SELECT p.id, p.name, p.description FROM permissions p "
                         "JOIN role_permissions rp ON p.id = rp.permission_id "
                         "JOIN user_roles ur ON rp.role_id = ur.role_id "
                         "WHERE ur.user_id = $1",
                         std::string(user_id));
 
-    std::vector<Permission> perms;
+    std::vector<domain::models::Permission> perms;
     for (const auto &row : result) {
-      perms.push_back({.name = row["name"].as<std::string>(),
-                       .description = row["description"].as<std::string>()});
+      domain::models::Permission p;
+      p.id = row["id"].template as<std::string>();
+      p.name = row["name"].template as<std::string>();
+      p.description = row["description"].template as<std::string>();
+      perms.push_back(p);
     }
     return perms;
   } catch (const std::exception &e) {
@@ -107,20 +110,23 @@ PostgresUserRepository::get_user_permissions(std::string_view user_id) {
   }
 }
 
-std::expected<std::vector<CommunicationChannel>, std::string>
+std::expected<std::vector<domain::models::CommunicationChannel>, std::string>
 PostgresUserRepository::get_user_channels(std::string_view user_id) {
   auto db = drogon::app().getDbClient();
   try {
     auto result = db->execSqlSync(
         "SELECT * FROM communication_channels WHERE user_id = $1",
         std::string(user_id));
-    std::vector<CommunicationChannel> channels;
+    std::vector<domain::models::CommunicationChannel> channels;
     for (const auto &row : result) {
-      channels.push_back({.id = row["id"].as<std::string>(),
-                          .user_id = row["user_id"].as<std::string>(),
-                          .channel_type = row["channel_type"].as<std::string>(),
-                          .enabled = row["enabled"].as<bool>(),
-                          .address = row["address"].as<std::string>()});
+      domain::models::CommunicationChannel c;
+      c.id = row["id"].template as<std::string>();
+      c.user_id = row["user_id"].template as<std::string>();
+      c.channel_type = row["channel_type"].template as<std::string>();
+      c.enabled = row["enabled"].template as<bool>();
+      c.address = row["address"].template as<std::string>();
+      c.created_at = std::chrono::system_clock::now();
+      channels.push_back(c);
     }
     return channels;
   } catch (const std::exception &e) {

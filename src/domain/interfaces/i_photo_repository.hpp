@@ -39,6 +39,7 @@ using namespace domain::models;
 struct PhotoFilter {
   std::optional<std::string> location_id;
   std::optional<std::string> tag;
+  std::optional<bool> is_public;
   int offset = 0;
   int limit = 20;
 };
@@ -58,6 +59,9 @@ public:
   virtual std::expected<void, std::string> save(const Photo &photo) = 0;
   virtual std::expected<void, std::string> add_tag(std::string_view photo_id,
                                                    std::string_view tag) = 0;
+  virtual std::expected<void, std::string> save_metadata_exif(std::string_view photo_id, const std::map<std::string, std::string>& metadata) = 0;
+  virtual std::expected<void, std::string> save_metadata_iptc(std::string_view photo_id, const std::map<std::string, std::string>& metadata) = 0;
+  virtual std::expected<void, std::string> save_metadata_xmp(std::string_view photo_id, const std::map<std::string, std::string>& metadata) = 0;
 };
 
 /**
@@ -68,7 +72,8 @@ class ILocationRepository {
 public:
   virtual ~ILocationRepository() = default;
 
-  virtual std::expected<std::vector<Location>, std::string> get_tree() = 0;
+  virtual std::expected<std::vector<Location>, std::string>
+  get_tree(bool only_public = false) = 0;
   virtual std::expected<std::optional<Location>, std::string>
   find_or_create(const Location &loc) = 0;
 };

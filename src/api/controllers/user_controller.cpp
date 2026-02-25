@@ -7,7 +7,7 @@
  *
  * @file user_controller.cpp
  * @brief User Controller Implementation file
- * @version 0.1.0
+ * @version 0.1.1
  * @date 2026-02-24
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
@@ -18,6 +18,7 @@
 
 #include "user_controller.hpp"
 #include "infra/repositories/user_repository.hpp"
+#include <drogon/HttpResponse.h>
 #include <nlohmann/json.hpp>
 
 namespace api::controllers {
@@ -50,7 +51,9 @@ void UserController::get_me(
     }
   }
 
-  auto resp = drogon::HttpResponse::newHttpJsonResponse(j);
+  auto resp = drogon::HttpResponse::newHttpResponse();
+  resp->setBody(j.dump());
+  resp->setContentTypeCode(drogon::CT_APPLICATION_JSON);
   callback(resp);
 }
 

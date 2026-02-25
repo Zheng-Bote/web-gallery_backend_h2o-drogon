@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include "api/middleware/optional_auth_middleware.hpp"
 #include <drogon/HttpController.h>
 
 /**
@@ -33,9 +34,8 @@ namespace api::controllers {
 class LocationController : public drogon::HttpController<LocationController> {
 public:
   METHOD_LIST_BEGIN
-  // Temporär OHNE Auth für den Test im Browser
-  ADD_METHOD_TO(LocationController::get_tree, "/api/locations/tree",
-                drogon::Get);
+  ADD_METHOD_TO(LocationController::get_tree, "/api/locations/tree", drogon::Get,
+                "api::middleware::OptionalAuthMiddleware");
   METHOD_LIST_END
 
   /**

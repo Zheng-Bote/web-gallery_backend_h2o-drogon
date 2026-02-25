@@ -1,14 +1,14 @@
 /**
- * SPDX-FileComment: Auth Middleware for Drogon
+ * SPDX-FileComment: Optional Auth Middleware for Drogon
  * SPDX-FileType: HEADER
  * SPDX-FileContributor: ZHENG Robert
  * SPDX-FileCopyrightText: 2026 ZHENG Robert
  * SPDX-License-Identifier: Apache-2.0
  *
- * @file auth_middleware.hpp
- * @brief Auth Middleware for Drogon
- * @version 0.1.5
- * @date 2026-02-24
+ * @file optional_auth_middleware.hpp
+ * @brief Optional Auth Middleware for Drogon
+ * @version 0.1.6
+ * @date 2026-02-25
  *
  * @author ZHENG Robert (robert@hase-zheng.net)
  * @copyright Copyright (c) 2026 ZHENG Robert
@@ -31,10 +31,10 @@
 namespace api::middleware {
 
 /**
- * @class AuthMiddleware
- * @brief Middleware for handling authentication headers.
+ * @class OptionalAuthMiddleware
+ * @brief Middleware for handling authentication headers optionally.
  */
-class AuthMiddleware : public drogon::HttpMiddleware<AuthMiddleware> {
+class OptionalAuthMiddleware : public drogon::HttpMiddleware<OptionalAuthMiddleware> {
 public:
   /**
    * @brief Invokes the middleware for the current request.
@@ -42,12 +42,14 @@ public:
   void invoke(const drogon::HttpRequestPtr &req,
               std::function<void(const drogon::HttpResponsePtr &)> &&advice,
               std::function<void()> &&next) {
+    (void)advice; // Prevent unused parameter warning
+
+    // Default to not authenticated - always insert to avoid exceptions in controller
+    req->attributes()->insert("is_authenticated", false);
 
     auto auth_header = req->getHeader("Authorization");
     if (auth_header.empty() || !auth_header.starts_with("Bearer ")) {
-      auto resp = drogon::HttpResponse::newHttpResponse();
-      resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
-      advice(resp);
+      next();
       return;
     }
 
@@ -56,13 +58,11 @@ public:
 
     auto payload = domain::services::TokenService::verify_token(token, secret);
     if (!payload) {
-      auto resp = drogon::HttpResponse::newHttpResponse();
-      resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
-      advice(resp);
+      next();
       return;
     }
 
-    // Store user info in request context
+    // Mark as authenticated and store payload info
     req->attributes()->insert("user_id", payload->user_id);
     req->attributes()->insert("username", payload->username);
     req->attributes()->insert("roles", payload->roles);

@@ -64,6 +64,8 @@ struct Photo {
   std::optional<float> focal_length;
   std::optional<double> gps_lat;
   std::optional<double> gps_lon;
+  std::optional<double> gps_alt;
+  bool is_public = true;
   std::chrono::system_clock::time_point created_at;
 
   std::vector<std::string> tags;

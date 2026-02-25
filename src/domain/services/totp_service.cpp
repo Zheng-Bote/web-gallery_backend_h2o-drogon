@@ -19,9 +19,12 @@
 #include "totp_service.hpp"
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <format>
+#include <random>
+#include <vector>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 
