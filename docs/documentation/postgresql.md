@@ -18,7 +18,8 @@ ENV PGDATA=/var/lib/postgresql/data/pgdata
 
 # Dokumentiere den internen Port (optional, aber Best Practice)
 EXPOSE 5432
-``
+```
+
 ## Build
 
 ```bash
